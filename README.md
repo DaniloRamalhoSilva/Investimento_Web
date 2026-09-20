@@ -1,6 +1,6 @@
-# Template Web
+# Investimento Web
 
-Template React/Vite para novos projetos web, baseado na organização visual e técnica do Business Hub Web.
+Interface React/Vite do produto de investimentos e da landing page pública do Sentinela.
 
 ## Desenvolvimento
 
@@ -13,6 +13,16 @@ npm run typecheck
 ```
 
 Configure `VITE_API_URL` em um arquivo `.env`. Sem uma URL configurada, o login local usa `admin` / `admin` para permitir a avaliação visual do template.
+
+## CI/CD
+
+O workflow `.github/workflows/ci.yml` valida lint, tipos e build, publica a
+imagem `ghcr.io/daniloramalhosilva/investimento-web:sha-<commit>` e, quando a
+variável `PRODUCTION_DEPLOY_ENABLED=true`, implanta a imagem no Environment
+`production`.
+
+O deploy usa o alvo `investimento-web` do script central da infraestrutura e
+valida `https://investimento.web.technologyrs.com.br/` depois da atualização.
 
 ## Estrutura
 

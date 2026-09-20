@@ -1,0 +1,135 @@
+name: CI and Publish Image
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run build
+
+  image:
+    runs-on: ubuntu-latest
+    needs: validate
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - name: Define image name
+        id: image
+        shell: bash
+        run: |
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          echo "name=ghcr.io/$owner/investimento-web" >> "$GITHUB_OUTPUT"
+      - name: Login to GHCR
+        if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and optionally publish
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          platforms: linux/amd64
+          load: ${{ github.event_name == 'pull_request' || github.ref != 'refs/heads/main' }}
+          push: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+          tags: |
+            ${{ steps.image.outputs.name }}:sha-${{ github.sha }}
+            ${{ steps.image.outputs.name }}:main
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          build-args: |
+            VITE_API_URL=https://investimento.api.technologyrs.com.br
+          cache-from: type=gha,scope=investimento-web
+          cache-to: type=gha,mode=max,scope=investimento-web
+          provenance: mode=max
+          sbom: true
+      - name: Verify image contents
+        env:
+          IMAGE_REF: ${{ steps.image.outputs.name }}:sha-${{ github.sha }}
+          IMAGE_WAS_PUSHED: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          if [[ "$IMAGE_WAS_PUSHED" == "true" ]]; then
+            docker pull "$IMAGE_REF"
+          fi
+          docker run --rm --entrypoint sh "$IMAGE_REF" -c '
+            set -eu
+            for forbidden_path in \
+              /usr/share/nginx/html/.env \
+              /usr/share/nginx/html/.git \
+              /usr/share/nginx/html/.github; do
+              if [ -e "$forbidden_path" ]; then
+                echo "Artefato privado ou local encontrado: $forbidden_path" >&2
+                exit 1
+              fi
+            done
+          '
+
+  deploy:
+    name: Deploy production
+    runs-on: ubuntu-latest
+    needs: image
+    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && vars.PRODUCTION_DEPLOY_ENABLED == 'true' }}
+    environment: production
+    env:
+      PROD_HOST: ${{ secrets.PROD_HOST }}
+      PROD_PORT: ${{ secrets.PROD_PORT }}
+      PROD_USER: ${{ secrets.PROD_USER }}
+      PROD_SSH_KEY: ${{ secrets.PROD_SSH_KEY }}
+      PROD_SSH_KNOWN_HOSTS: ${{ secrets.PROD_SSH_KNOWN_HOSTS }}
+    steps:
+      - name: Configure SSH
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -n "$PROD_HOST"
+          test -n "$PROD_USER"
+          test -n "$PROD_SSH_KEY"
+          test -n "$PROD_SSH_KNOWN_HOSTS"
+          case "${PROD_PORT:-22}" in *[!0-9]*|'') exit 1 ;; esac
+          install -d -m 700 "$HOME/.ssh"
+          install -m 600 /dev/null "$HOME/.ssh/deploy_key"
+          printf '%s\n' "$PROD_SSH_KEY" > "$HOME/.ssh/deploy_key"
+          printf '%s\n' "$PROD_SSH_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          ssh-keygen -y -f "$HOME/.ssh/deploy_key" >/dev/null
+      - name: Deploy immutable image
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          ssh -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            -i "$HOME/.ssh/deploy_key" -p "${PROD_PORT:-22}" \
+            "$PROD_USER@$PROD_HOST" \
+            /opt/RsTecnotechnology/bin/deploy-stack.sh investimento-web "$GITHUB_SHA"
+      - name: Verify public endpoint
+        run: >-
+          curl -fsS --retry 20 --retry-all-errors --retry-delay 3
+          https://investimento.web.technologyrs.com.br/ >/dev/null
