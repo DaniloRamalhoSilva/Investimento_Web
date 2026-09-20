@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { LoginPage } from "@/features/auth/LoginPage";
 import { DashboardPage } from "@/features/dashboard/DashboardPage";
 import { ProfilePage } from "@/features/profile/ProfilePage";
+import { SentinelaLandingPage } from "@/features/sentinela/SentinelaLandingPage";
 import { AppShell } from "@/layouts/AppShell/AppShell";
 import { ProtectedRoute, PublicRoute } from "@/shared/auth/ProtectedRoute";
 
@@ -29,6 +30,7 @@ function PlaceholderPage({ title }: { title: string }) {
 export function AppRoutes() {
   return (
     <Routes>
+      <Route element={<SentinelaLandingPage />} path="/sentinela" />
       <Route element={<PublicRoute />}>
         <Route element={<LoginPage />} path="/login" />
       </Route>

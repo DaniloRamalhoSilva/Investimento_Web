@@ -5,6 +5,7 @@
 html {
   min-width: 320px;
   background: var(--color-page);
+  scroll-behavior: smooth;
 }
 body {
   margin: 0;
@@ -44,6 +45,11 @@ p {
 }
 #root {
   min-height: 100vh;
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
 .template-page {
   min-width: 0;
