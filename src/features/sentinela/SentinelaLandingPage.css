@@ -157,7 +157,7 @@
   min-height: 820px;
   display: grid;
   align-items: center;
-  padding: 150px 0 110px;
+  padding: 130px 0 20px;
 }
 
 .sentinela-hero::before,
@@ -183,20 +183,14 @@
   inset: 0;
   content: "";
   background:
-    linear-gradient(
-      90deg,
-      rgba(4, 13, 20, 0.97) 3%,
-      rgba(4, 13, 20, 0.76) 46%,
-      rgba(4, 13, 20, 0.22) 78%
-    ),
-    linear-gradient(180deg, rgba(4, 13, 20, 0.2), #061018 96%);
+    linear-gradient(240deg, rgba(4, 13, 20, 0), #061018 100%);
 }
 
 .sentinela-hero__grid {
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.75fr);
   align-items: center;
-  gap: 64px;
+  gap: 34px;
 }
 
 .sentinela-hero__content {
@@ -340,15 +334,16 @@
 
 .sentinela-hero__visual {
   position: relative;
-  min-height: 520px;
+  min-height: 20px;
   display: grid;
   place-items: center;
+  border-bottom: 2px solid rgba(44, 224, 189, 0.7);
 }
 
 .sentinela-hero__visual img {
   position: relative;
   z-index: 2;
-  width: min(75%, 330px);
+  width: min(75%, 280px);
   height: auto;
   filter: drop-shadow(0 38px 48px rgba(0, 0, 0, 0.55));
 }
@@ -384,7 +379,7 @@
 
 .sentinela-section {
   position: relative;
-  padding: 130px 0;
+  padding: 30px 0;
 }
 
 .sentinela-section-title {
@@ -470,10 +465,10 @@
 .sentinela-signal {
   position: relative;
   isolation: isolate;
-  min-height: 690px;
+  min-height: 100px;
   display: grid;
   align-items: center;
-  padding: 120px 0;
+  padding: 100px 0;
 }
 
 .sentinela-signal::before {
@@ -486,25 +481,13 @@
   inset: 0;
   content: "";
   background:
-    linear-gradient(
-      90deg,
-      rgba(4, 13, 20, 0.25),
-      rgba(4, 13, 20, 0.94) 52%,
-      rgba(4, 13, 20, 0.84)
-    ),
-    linear-gradient(
-      180deg,
-      #061018 0%,
-      transparent 24%,
-      transparent 76%,
-      #061018 100%
-    );
+    linear-gradient(200deg, rgba(4, 13, 20, 0), #061018 100%);
 }
 
 .sentinela-signal__content {
   display: grid;
   justify-items: start;
-  padding-left: clamp(20px, 44vw, 560px);
+  padding-left: clamp(20px, 44vw, 90px);
 }
 
 .sentinela-signal__count {
@@ -927,6 +910,10 @@
 .sentinela-field {
   display: grid;
   gap: 7px;
+}
+
+.sentinela-field--phone {
+  grid-column: 1 / -1;
 }
 
 .sentinela-field label {

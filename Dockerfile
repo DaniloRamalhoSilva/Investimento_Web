@@ -8,8 +8,6 @@ RUN npm ci
 COPY . .
 ARG VITE_API_URL=https://investimento.api.technologyrs.com.br
 ENV VITE_API_URL=$VITE_API_URL
-ARG VITE_WAITLIST_API_URL=
-ENV VITE_WAITLIST_API_URL=$VITE_WAITLIST_API_URL
 RUN npm run build
 
 FROM nginx:1.29-alpine

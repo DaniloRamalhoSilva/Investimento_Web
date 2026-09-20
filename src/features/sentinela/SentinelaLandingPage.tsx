@@ -420,7 +420,11 @@ function WaitlistForm() {
   const [status, setStatus] = useState<
     "idle" | "submitting" | "success" | "error"
   >("idle");
-  const [errors, setErrors] = useState<{ name?: string; email?: string }>({});
+  const [errors, setErrors] = useState<{
+    name?: string;
+    email?: string;
+    whatsapp?: string;
+  }>({});
   const [showSurvey, setShowSurvey] = useState(false);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -432,18 +436,26 @@ function WaitlistForm() {
     const email = String(data.get("email") ?? "")
       .trim()
       .toLowerCase();
-    const nextErrors: { name?: string; email?: string } = {};
+    const whatsapp = String(data.get("whatsapp") ?? "").trim();
+    const whatsappDigits = whatsapp.replace(/\D/g, "");
+    const nextErrors: {
+      name?: string;
+      email?: string;
+      whatsapp?: string;
+    } = {};
 
     if (name.length < 2) nextErrors.name = "Digite seu nome.";
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
       nextErrors.email = "Digite um e-mail válido.";
+    if (whatsappDigits.length < 10 || whatsappDigits.length > 15)
+      nextErrors.whatsapp = "Digite um WhatsApp válido com DDD.";
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length) return;
 
     setStatus("submitting");
     trackEvent("waitlist_submit_started");
     try {
-      await joinWaitlist({ name, email });
+      await joinWaitlist({ nome: name, email, whatsapp });
       setStatus("success");
       trackEvent("waitlist_submit_success");
     } catch {
@@ -519,6 +531,29 @@ function WaitlistForm() {
         {errors.email && (
           <span id="sentinela-email-error" className="sentinela-field__error">
             {errors.email}
+          </span>
+        )}
+      </div>
+      <div className="sentinela-field sentinela-field--phone">
+        <label htmlFor="sentinela-whatsapp">WhatsApp</label>
+        <input
+          id="sentinela-whatsapp"
+          name="whatsapp"
+          type="tel"
+          inputMode="tel"
+          autoComplete="tel"
+          aria-invalid={Boolean(errors.whatsapp)}
+          aria-describedby={
+            errors.whatsapp ? "sentinela-whatsapp-error" : undefined
+          }
+          placeholder="(11) 99999-9999"
+        />
+        {errors.whatsapp && (
+          <span
+            id="sentinela-whatsapp-error"
+            className="sentinela-field__error"
+          >
+            {errors.whatsapp}
           </span>
         )}
       </div>
@@ -752,13 +787,6 @@ export function SentinelaLandingPage() {
                 width="183"
                 height="293"
               />
-              <span className="sentinela-hero__note">
-                Observar.
-                <br />
-                Entender.
-                <br />
-                Antecipar.
-              </span>
             </div>
           </div>
         </section>

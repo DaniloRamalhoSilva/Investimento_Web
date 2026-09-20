@@ -1,6 +1,7 @@
-# Investimento Web
+# Sentinela Landing Page
 
-Interface React/Vite do produto de investimentos e da landing page pública do Sentinela.
+Landing page pública e independente do Sentinela, construída com React e Vite. Este
+projeto não contém autenticação, dashboard ou menus do sistema principal.
 
 ## Desenvolvimento
 
@@ -12,7 +13,8 @@ npm run lint
 npm run typecheck
 ```
 
-Configure `VITE_API_URL` em um arquivo `.env`. Sem uma URL configurada, o login local usa `admin` / `admin` para permitir a avaliação visual do template.
+Configure `VITE_API_URL` em um arquivo `.env`. O formulário envia `nome`, `email` e
+`whatsapp` para `POST /api/v1/waitlist`; não existe confirmação simulada.
 
 ## CI/CD
 
@@ -26,10 +28,8 @@ valida `https://investimento.web.technologyrs.com.br/` depois da atualização.
 
 ## Estrutura
 
-- `src/app`: composição da aplicação.
-- `src/routes`: rotas públicas e protegidas.
-- `src/layouts`: shell, sidebar, topbar e navegação.
-- `src/components`: componentes de UI, formulários, feedback e dados.
-- `src/shared`: API, autenticação, eventos e infraestrutura compartilhada.
-- `src/features`: páginas e lógica organizada por funcionalidade.
-- `src/styles`: tokens e estilos globais.
+- `src/app`: composição mínima da aplicação.
+- `src/features/sentinela`: landing page, estilos, analytics e integração da lista de espera.
+- `src/assets/sentinela`: imagens usadas pela landing page.
+- `src/styles`: reset global mínimo.
+- `Doc`: especificação e referências visuais da landing page.

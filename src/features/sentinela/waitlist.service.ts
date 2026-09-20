@@ -1,21 +1,20 @@
 export type WaitlistPayload = {
-  name: string;
+  nome: string;
   email: string;
+  whatsapp: string;
 };
 
 export async function joinWaitlist(payload: WaitlistPayload) {
-  const endpoint = import.meta.env.VITE_WAITLIST_API_URL as string | undefined;
+  const apiUrl = (import.meta.env.VITE_API_URL as string | undefined)?.replace(
+    /\/$/,
+    "",
+  );
 
-  if (!endpoint) {
-    if (import.meta.env.DEV) {
-      await new Promise((resolve) => window.setTimeout(resolve, 750));
-      return { ok: true };
-    }
-
-    throw new Error("Waitlist endpoint is not configured.");
+  if (!apiUrl) {
+    throw new Error("VITE_API_URL não está configurada.");
   }
 
-  const response = await fetch(endpoint, {
+  const response = await fetch(`${apiUrl}/api/v1/waitlist`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -25,5 +24,5 @@ export async function joinWaitlist(payload: WaitlistPayload) {
     throw new Error("Waitlist request failed.");
   }
 
-  return { ok: true };
+  return response.json() as Promise<{ data: { registered: true } }>;
 }
